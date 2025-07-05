@@ -22,10 +22,17 @@ jobs:
         run: npm install
 
       - name: Build the app
-        run: npm run build
+        run: npx expo export --platform web  # Ensure this matches your build script
 
+      - name: Rename dist to docs
+        run: mv dist docs
+
+      - name: Clean docs folder
+        run: Remove-Item -Recurse -Force docs
+        shell: powershell
+        
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./web-build  # or ./build depending on your build output folder
+          publish_dir: ./docs  # or ./build depending on your build output folder

@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
@@ -27,10 +27,30 @@ export default function FinanceScreen() {
   const [selectedSheet, setSelectedSheet] = useState('');
   const [goal, setGoal] = useState('');
   const [currentBalance, setCurrentBalance] = useState('');
-  // Each income/outgoing is now an object { label: string, amount: string }
   const [incomes, setIncomes] = useState([{ label: '', amount: '' }]);
   const [outgoings, setOutgoings] = useState([{ label: '', amount: '' }]);
   const [savedSheets, setSavedSheets] = useState<{ [key: string]: any }>({});
+
+  // Load saved sheets from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('savedSheets');
+      if (stored) {
+        setSavedSheets(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.warn('Failed to load saved sheets from localStorage', e);
+    }
+  }, []);
+
+  // Save sheets to localStorage whenever savedSheets changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('savedSheets', JSON.stringify(savedSheets));
+    } catch (e) {
+      console.warn('Failed to save sheets to localStorage', e);
+    }
+  }, [savedSheets]);
 
   // Add income or outgoing row if last amount is filled
   const addIncome = () => {
@@ -270,59 +290,55 @@ export default function FinanceScreen() {
           </View>
         </View>
 
-        {/* Save and New Sheet Buttons */}
-        <TouchableOpacity style={styles.saveButton} onPress={saveSheet}>
-          <Text style={styles.saveText}>Save Sheet</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.saveButton, styles.newSheetButton]} onPress={resetAll}>
-          <Text style={styles.saveText}>New Sheet</Text>
-        </TouchableOpacity>
-
-        {/* Results Box */}
-        <View style={styles.resultBox}>
-          <Text style={styles.resultText}>Total Income: {formatCurrency(totalIncome)}</Text>
-          <Text style={styles.resultText}>Total Outgoings: {formatCurrency(totalOutgoings)}</Text>
+        {/* Totals Display */}
+        <View style={styles.totalsRow}>
+          <Text style={styles.totalText}>
+            Total Income: {formatCurrency(totalIncome)}
+          </Text>
+          <Text style={styles.totalText}>
+            Total Outgoings: {formatCurrency(totalOutgoings)}
+          </Text>
           <Text
             style={[
-              styles.resultText,
-              { color: difference >= 0 ? '#198754' : '#dc3545', fontWeight: '700' },
+              styles.totalText,
+              difference >= 0 ? styles.positive : styles.negative,
             ]}
           >
             Difference: {formatCurrency(difference)}
           </Text>
-
-          {numericGoal > 0 && (
-            <>
-              <Text style={styles.resultText}>
-                Saving Goal: {formatCurrency(numericGoal)}
-              </Text>
-              <Text style={styles.resultText}>
-                Current Balance: {formatCurrency(numericCurrentBalance)}
-              </Text>
-
-              {reachedGoal ? (
-                <Text style={[styles.message, styles.successMessage]}>
-                  🎉 Goal reached! You have met or exceeded your saving target.
-                </Text>
-              ) : difference > 0 ? (
-                <Text style={[styles.message, styles.infoMessage]}>
-                  You need {formatCurrency(needed)} more to reach your goal.
-                </Text>
-              ) : (
-                <Text style={[styles.message, styles.warningMessage]}>
-                  Your income is not enough to reach the goal with current outgoings.
-                </Text>
-              )}
-
-              {difference > 0 && !reachedGoal && (
-                <Text style={styles.message}>
-                  Estimated months to reach goal: {months}
-                </Text>
-              )}
-            </>
-          )}
         </View>
+
+        {/* Save & Reset Buttons */}
+        <View style={styles.buttonsRow}>
+          <TouchableOpacity style={styles.saveButton} onPress={saveSheet}>
+            <Text style={styles.buttonText}>Save Sheet</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
+            <Text style={styles.buttonText}>Reset</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Goal Status & Info */}
+        {reachedGoal && (
+          <Text style={[styles.infoText, styles.success]}>
+            🎉 You have reached your goal!
+          </Text>
+        )}
+        {!reachedGoal && numericGoal > 0 && difference > 0 && (
+          <Text style={styles.infoText}>
+            You need {formatCurrency(needed)} more to reach your goal.
+          </Text>
+        )}
+        {!reachedGoal && numericGoal > 0 && difference <= 0 && (
+          <Text style={[styles.infoText, styles.warning]}>
+            Your monthly surplus is zero or negative, so the goal cannot be reached at this rate.
+          </Text>
+        )}
+        {!reachedGoal && numericGoal > 0 && difference > 0 && (
+          <Text style={styles.infoText}>
+            Estimated months to reach goal: {months}
+          </Text>
+        )}
       </ScrollView>
     </LinearGradient>
   );
@@ -331,46 +347,42 @@ export default function FinanceScreen() {
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? 30 : 60,
   },
   container: {
-    padding: 15,
-    paddingBottom: 40,
+    padding: 20,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#007bff',
-    marginBottom: 12,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 15,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    marginVertical: 10,
   },
   pickerWrapper: {
-    borderWidth: 1,
     borderColor: '#007bff',
-    borderRadius: 8,
-    marginBottom: 15,
-    overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 10,
+    overflow: 'hidden',
   },
   picker: {
-    height: 45,
-    color: '#007bff',
+    height: 50,
+    width: '100%',
   },
   inputBox: {
+    borderColor: '#007bff',
     borderWidth: 1,
-    borderColor: '#bbb',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    fontSize: 16,
-    backgroundColor: '#fff',
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 10,
+    backgroundColor: 'white',
   },
   goalRow: {
     flexDirection: 'row',
-    marginBottom: 15,
   },
   flex1: {
     flex: 1,
@@ -386,82 +398,85 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 6,
+    marginBottom: 10,
   },
   labelInput: {
     flex: 2,
-    marginRight: 8,
+    marginRight: 5,
   },
   amountInput: {
     flex: 1,
+    marginRight: 5,
   },
   deleteButton: {
-    marginLeft: 10,
-    backgroundColor: '#dc3545',
-    borderRadius: 6,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 4,
+    backgroundColor: '#ff4444',
+    borderRadius: 4,
   },
   deleteText: {
-    color: '#fff',
-    fontWeight: '700',
+    color: 'white',
+    fontWeight: 'bold',
     fontSize: 18,
-    lineHeight: 18,
   },
   addButton: {
-    backgroundColor: '#0d6efd',
-    marginTop: 8,
-    borderRadius: 6,
-    paddingVertical: 6,
+    backgroundColor: '#007bff',
     alignItems: 'center',
+    padding: 8,
+    borderRadius: 6,
   },
   addText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 22,
+    fontWeight: 'bold',
+  },
+  totalsRow: {
+    marginTop: 15,
+  },
+  totalText: {
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  positive: {
+    color: 'green',
+  },
+  negative: {
+    color: 'red',
+  },
+  buttonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 20,
   },
   saveButton: {
-    marginTop: 20,
-    backgroundColor: '#198754',
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: '#28a745',
+    padding: 10,
+    borderRadius: 6,
+    flex: 1,
+    marginRight: 10,
     alignItems: 'center',
   },
-  newSheetButton: {
-    backgroundColor: '#0d6efd',
-    marginTop: 12,
+  resetButton: {
+    backgroundColor: '#dc3545',
+    padding: 10,
+    borderRadius: 6,
+    flex: 1,
+    marginLeft: 10,
+    alignItems: 'center',
   },
-  saveText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
   },
-  resultBox: {
-    marginTop: 30,
-    padding: 20,
-    borderRadius: 10,
-    backgroundColor: '#f0f4f8',
-  },
-  resultText: {
+  infoText: {
     fontSize: 16,
-    marginBottom: 6,
-    color: '#212529',
+    textAlign: 'center',
+    marginTop: 10,
   },
-  message: {
-    marginTop: 12,
-    fontSize: 16,
+  success: {
+    color: 'green',
   },
-  successMessage: {
-    color: '#198754',
-    fontWeight: '700',
-  },
-  warningMessage: {
-    color: '#dc3545',
-    fontWeight: '700',
-  },
-  infoMessage: {
-    color: '#0d6efd',
-    fontWeight: '700',
+  warning: {
+    color: 'orange',
   },
 });

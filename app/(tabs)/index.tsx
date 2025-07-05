@@ -1,7 +1,7 @@
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect, useState } from 'react'; // added useEffect
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
 
 function formatCurrency(value: string | number) {
   const number = typeof value === 'string' ? parseFloat(value) : value;
@@ -25,30 +25,10 @@ export default function FinanceScreen() {
   const [selectedSheet, setSelectedSheet] = useState('');
   const [goal, setGoal] = useState('');
   const [currentBalance, setCurrentBalance] = useState('');
+  // Each income/outgoing is now an object { label: string, amount: string }
   const [incomes, setIncomes] = useState([{ label: '', amount: '' }]);
   const [outgoings, setOutgoings] = useState([{ label: '', amount: '' }]);
   const [savedSheets, setSavedSheets] = useState<{ [key: string]: any }>({});
-
-  // Load saved sheets from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('savedSheets');
-      if (saved) {
-        setSavedSheets(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.warn('Failed to load saved sheets from localStorage', e);
-    }
-  }, []);
-
-  // Save sheets to localStorage whenever savedSheets changes
-  useEffect(() => {
-    try {
-      localStorage.setItem('savedSheets', JSON.stringify(savedSheets));
-    } catch (e) {
-      console.warn('Failed to save sheets to localStorage', e);
-    }
-  }, [savedSheets]);
 
   // Add income or outgoing row if last amount is filled
   const addIncome = () => {
@@ -301,20 +281,44 @@ export default function FinanceScreen() {
         <View style={styles.resultBox}>
           <Text style={styles.resultText}>Total Income: {formatCurrency(totalIncome)}</Text>
           <Text style={styles.resultText}>Total Outgoings: {formatCurrency(totalOutgoings)}</Text>
-          <Text style={[styles.resultText, difference >= 0 ? styles.positive : styles.negative]}>
+          <Text
+            style={[
+              styles.resultText,
+              { color: difference >= 0 ? '#198754' : '#dc3545', fontWeight: '700' },
+            ]}
+          >
             Difference: {formatCurrency(difference)}
           </Text>
-          <Text style={styles.resultText}>
-            Goal Needed: {formatCurrency(needed)}
-          </Text>
-          <Text style={styles.resultText}>
-            Months to reach goal: {months}
-          </Text>
-          {reachedGoal && <Text style={styles.successMessage}>Goal reached!</Text>}
-          {numericGoal && !reachedGoal && months === '∞' && (
-            <Text style={styles.errorMessage}>
-              You cannot reach the goal with the current balance and net difference.
-            </Text>
+
+          {numericGoal > 0 && (
+            <>
+              <Text style={styles.resultText}>
+                Saving Goal: {formatCurrency(numericGoal)}
+              </Text>
+              <Text style={styles.resultText}>
+                Current Balance: {formatCurrency(numericCurrentBalance)}
+              </Text>
+
+              {reachedGoal ? (
+                <Text style={[styles.message, styles.successMessage]}>
+                  🎉 Goal reached! You have met or exceeded your saving target.
+                </Text>
+              ) : difference > 0 ? (
+                <Text style={[styles.message, styles.infoMessage]}>
+                  You need {formatCurrency(needed)} more to reach your goal.
+                </Text>
+              ) : (
+                <Text style={[styles.message, styles.warningMessage]}>
+                  Your income is not enough to reach the goal with current outgoings.
+                </Text>
+              )}
+
+              {difference > 0 && !reachedGoal && (
+                <Text style={styles.message}>
+                  Estimated months to reach goal: {months}
+                </Text>
+              )}
+            </>
           )}
         </View>
       </ScrollView>
@@ -327,47 +331,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 20,
-    paddingBottom: 60,
+    padding: 15,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
-    marginBottom: 15,
-    color: '#222',
+    color: '#007bff',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
   },
   pickerWrapper: {
     borderWidth: 1,
     borderColor: '#007bff',
-    borderRadius: 5,
+    borderRadius: 8,
     marginBottom: 15,
+    overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
   },
   picker: {
-    height: 40,
-    width: '100%',
+    height: 45,
     color: '#007bff',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginVertical: 10,
-    color: '#333',
   },
   inputBox: {
     borderWidth: 1,
-    borderColor: '#aaa',
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    height: 40,
-    marginBottom: 10,
-    color: '#000',
-  },
-  flex1: {
-    flex: 1,
+    borderColor: '#bbb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+    fontSize: 16,
+    backgroundColor: '#fff',
   },
   goalRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  flex1: {
+    flex: 1,
   },
   columnsRow: {
     flexDirection: 'row',
@@ -380,80 +384,82 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginVertical: 6,
   },
   labelInput: {
-    flex: 1,
-    marginRight: 5,
+    flex: 2,
+    marginRight: 8,
   },
   amountInput: {
-    width: 90,
-    textAlign: 'right',
+    flex: 1,
   },
   deleteButton: {
-    marginLeft: 5,
-    backgroundColor: '#f44336',
-    borderRadius: 3,
-    paddingHorizontal: 5,
+    marginLeft: 10,
+    backgroundColor: '#dc3545',
+    borderRadius: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
   },
   deleteText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: '700',
+    fontSize: 18,
+    lineHeight: 18,
   },
   addButton: {
-    marginTop: 5,
-    backgroundColor: '#007bff',
-    borderRadius: 3,
-    paddingVertical: 5,
+    backgroundColor: '#0d6efd',
+    marginTop: 8,
+    borderRadius: 6,
+    paddingVertical: 6,
     alignItems: 'center',
   },
   addText: {
-    color: 'white',
+    color: '#fff',
+    fontSize: 22,
     fontWeight: '700',
-    fontSize: 18,
+    lineHeight: 22,
   },
   saveButton: {
-    marginTop: 15,
-    backgroundColor: '#28a745',
-    paddingVertical: 10,
-    borderRadius: 5,
+    marginTop: 20,
+    backgroundColor: '#198754',
+    borderRadius: 8,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   newSheetButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: '#0d6efd',
+    marginTop: 12,
   },
   saveText: {
-    color: 'white',
-    fontWeight: '700',
+    color: '#fff',
     fontSize: 18,
+    fontWeight: '700',
   },
   resultBox: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#e9ecef',
-    borderRadius: 5,
+    marginTop: 30,
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: '#f0f4f8',
   },
   resultText: {
     fontSize: 16,
-    marginBottom: 5,
+    marginBottom: 6,
+    color: '#212529',
   },
-  positive: {
-    color: 'green',
-  },
-  negative: {
-    color: 'red',
+  message: {
+    marginTop: 12,
+    fontSize: 16,
   },
   successMessage: {
-    marginTop: 10,
-    color: 'green',
+    color: '#198754',
     fontWeight: '700',
-    fontSize: 16,
   },
-  errorMessage: {
-    marginTop: 10,
-    color: 'red',
+  warningMessage: {
+    color: '#dc3545',
     fontWeight: '700',
-    fontSize: 16,
+  },
+  infoMessage: {
+    color: '#0d6efd',
+    fontWeight: '700',
   },
 });

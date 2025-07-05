@@ -21,18 +21,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Remove old docs folder
+        run: rm -rf docs
+
       - name: Build the app
-        run: npx expo export --platform web  # Ensure this matches your build script
+        run: npx expo export --platform web
 
       - name: Rename dist to docs
         run: mv dist docs
 
-      - name: Clean docs folder
-        run: Remove-Item -Recurse -Force docs
-        shell: powershell
-        
+      - name: Copy index.html to 404.html
+        run: cp docs/index.html docs/404.html
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs  # or ./build depending on your build output folder
+          publish_dir: ./docs

@@ -1,7 +1,9 @@
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from 'react-native';
+import {
+  Alert, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,
+} from 'react-native';
 
 function formatCurrency(value: string | number) {
   const number = typeof value === 'string' ? parseFloat(value) : value;

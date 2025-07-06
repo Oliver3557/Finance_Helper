@@ -24,7 +24,12 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "basePath": "/Finance_Helper"
+      "basePath": "/Finance_Helper",
+      "linking": {
+        "prefixes": [
+          "https://oliver3557.github.io/Finance_Helper"
+        ]
+      }
     },
     "plugins": [
       "expo-router",

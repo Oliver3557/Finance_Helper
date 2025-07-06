@@ -22,7 +22,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "export",
       "favicon": "./assets/images/favicon.png",
       "basePath": "/Finance_Helper",
       "linking": {

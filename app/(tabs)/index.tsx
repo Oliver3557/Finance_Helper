@@ -10,10 +10,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  useWindowDimensions
+  useWindowDimensions,
 } from 'react-native';
 
-/* ---------- helpers ---------- */
+/* --- helpers --- */
 function formatCurrency(value: string | number) {
   const number = typeof value === 'string' ? parseFloat(value) : value;
   if (isNaN(number)) return '';
@@ -27,13 +27,12 @@ function formatNumberInput(text: string) {
   return cleaned;
 }
 
-/* ---------- component ---------- */
 export default function FinanceScreen() {
   /* responsive flag */
   const { width } = useWindowDimensions();
-  const isSmall = width < 400;          // ≤400 px stacks columns
+  const isSmall = width < 400;
 
-  /* state & persistence (unchanged) */
+  /* state (unchanged) */
   const [sheetName, setSheetName] = useState('');
   const [selectedSheet, setSelectedSheet] = useState('');
   const [goal, setGoal] = useState('');
@@ -42,48 +41,35 @@ export default function FinanceScreen() {
   const [outgoings, setOutgoings] = useState([{ label: '', amount: '' }]);
   const [savedSheets, setSavedSheets] = useState<{ [key: string]: any }>({});
 
+  /* localStorage sync (unchanged) */
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('savedSheets');
-      if (stored) setSavedSheets(JSON.parse(stored));
-    } catch {}
+    const stored = localStorage.getItem('savedSheets');
+    if (stored) setSavedSheets(JSON.parse(stored));
   }, []);
   useEffect(() => {
-    try {
-      localStorage.setItem('savedSheets', JSON.stringify(savedSheets));
-    } catch {}
+    localStorage.setItem('savedSheets', JSON.stringify(savedSheets));
   }, [savedSheets]);
 
   /* helpers (unchanged) */
   const addIncome = () => {
-    if (!incomes[incomes.length - 1].amount) {
-      Alert.alert('Please enter an amount before adding another.');
-      return;
-    }
+    if (!incomes.at(-1)?.amount) return Alert.alert('Please enter an amount first');
     setIncomes([...incomes, { label: '', amount: '' }]);
   };
   const addOutgoing = () => {
-    if (!outgoings[outgoings.length - 1].amount) {
-      Alert.alert('Please enter an amount before adding another.');
-      return;
-    }
+    if (!outgoings.at(-1)?.amount) return Alert.alert('Please enter an amount first');
     setOutgoings([...outgoings, { label: '', amount: '' }]);
   };
-  const deleteIncome = (i: number) =>
-    setIncomes(incomes.filter((_, idx) => idx !== i));
-  const deleteOutgoing = (i: number) =>
-    setOutgoings(outgoings.filter((_, idx) => idx !== i));
+  const deleteIncome = (i: number) => setIncomes(incomes.filter((_, idx) => idx !== i));
+  const deleteOutgoing = (i: number) => setOutgoings(outgoings.filter((_, idx) => idx !== i));
 
   const updateIncomeLabel = (t: string, i: number) =>
     setIncomes(incomes.map((r, idx) => (idx === i ? { ...r, label: t } : r)));
   const updateIncomeAmount = (t: string, i: number) =>
-    setIncomes(incomes.map((r, idx) =>
-      idx === i ? { ...r, amount: formatNumberInput(t) } : r));
+    setIncomes(incomes.map((r, idx) => (idx === i ? { ...r, amount: formatNumberInput(t) } : r)));
   const updateOutgoingLabel = (t: string, i: number) =>
     setOutgoings(outgoings.map((r, idx) => (idx === i ? { ...r, label: t } : r)));
   const updateOutgoingAmount = (t: string, i: number) =>
-    setOutgoings(outgoings.map((r, idx) =>
-      idx === i ? { ...r, amount: formatNumberInput(t) } : r));
+    setOutgoings(outgoings.map((r, idx) => (idx === i ? { ...r, amount: formatNumberInput(t) } : r)));
 
   const resetAll = () => {
     setSheetName('');
@@ -93,20 +79,12 @@ export default function FinanceScreen() {
     setIncomes([{ label: '', amount: '' }]);
     setOutgoings([{ label: '', amount: '' }]);
   };
-
   const saveSheet = () => {
-    if (!sheetName.trim()) {
-      Alert.alert('Please enter a sheet name to save.');
-      return;
-    }
-    setSavedSheets(prev => ({
-      ...prev,
-      [sheetName]: { goal, currentBalance, incomes, outgoings },
-    }));
+    if (!sheetName.trim()) return Alert.alert('Please enter a sheet name.');
+    setSavedSheets(prev => ({ ...prev, [sheetName]: { goal, currentBalance, incomes, outgoings } }));
     setSelectedSheet(sheetName);
     Alert.alert('Sheet saved!');
   };
-
   const loadSheet = (name: string) => {
     if (!name) return resetAll();
     const sheet = savedSheets[name];
@@ -130,20 +108,14 @@ export default function FinanceScreen() {
   const months = difference > 0 ? Math.ceil(needed / difference) : '∞';
   const reachedGoal = numericGoal && numericCurrentBalance >= numericGoal;
 
-  /* render */
+  /* --- render --- */
   return (
     <LinearGradient colors={['#e0eafc', '#cfdef3']} style={styles.gradient}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>Saving Goal Calculator</Text>
 
-        {/* Picker */}
         <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={selectedSheet}
-            onValueChange={loadSheet}
-            style={styles.picker}
-            dropdownIconColor="#007bff"
-          >
+          <Picker selectedValue={selectedSheet} onValueChange={loadSheet} style={styles.picker}>
             <Picker.Item label="-- Select a sheet --" value="" />
             {Object.keys(savedSheets).map(name => (
               <Picker.Item key={name} label={name} value={name} />
@@ -160,8 +132,6 @@ export default function FinanceScreen() {
         />
 
         <Text style={[styles.sectionTitle, { marginTop: 10 }]}>Goal & Balance</Text>
-
-        {/* goal / balance */}
         <View style={[styles.goalRow, isSmall && { flexDirection: 'column' }]}>
           <TextInput
             placeholder="Saving Goal"
@@ -183,18 +153,22 @@ export default function FinanceScreen() {
           />
         </View>
 
-        {/* Income / Outgoings */}
+        {/* Income & Outgoings */}
         <View style={[styles.columnsRow, isSmall && { flexDirection: 'column' }]}>
           {/* Income */}
           <View style={[styles.column, isSmall && { marginBottom: 20 }]}>
             <Text style={styles.title}>Income</Text>
             {incomes.map(({ label, amount }, i) => (
-              <View key={i} style={[styles.row, isSmall && { flexWrap: 'wrap' }]}>
+              <View key={i} style={[styles.row, isSmall && styles.rowSmall]}>
                 <TextInput
                   placeholder="Label (optional)"
                   value={label}
                   onChangeText={t => updateIncomeLabel(t, i)}
-                  style={[styles.inputBox, styles.labelInput, isSmall && { width: '100%' }]}
+                  style={[
+                    styles.inputBox,
+                    styles.labelInput,
+                    isSmall && styles.labelSmall,
+                  ]}
                 />
                 <TextInput
                   placeholder="Amount"
@@ -204,7 +178,7 @@ export default function FinanceScreen() {
                   style={[
                     styles.inputBox,
                     styles.amountInput,
-                    isSmall && { width: '100%', marginTop: 4 },
+                    isSmall && styles.amountSmall,
                   ]}
                 />
                 {incomes.length > 1 && (
@@ -223,12 +197,16 @@ export default function FinanceScreen() {
           <View style={styles.column}>
             <Text style={styles.title}>Outgoings</Text>
             {outgoings.map(({ label, amount }, i) => (
-              <View key={i} style={[styles.row, isSmall && { flexWrap: 'wrap' }]}>
+              <View key={i} style={[styles.row, isSmall && styles.rowSmall]}>
                 <TextInput
                   placeholder="Label (optional)"
                   value={label}
                   onChangeText={t => updateOutgoingLabel(t, i)}
-                  style={[styles.inputBox, styles.labelInput, isSmall && { width: '100%' }]}
+                  style={[
+                    styles.inputBox,
+                    styles.labelInput,
+                    isSmall && styles.labelSmall,
+                  ]}
                 />
                 <TextInput
                   placeholder="Amount"
@@ -238,7 +216,7 @@ export default function FinanceScreen() {
                   style={[
                     styles.inputBox,
                     styles.amountInput,
-                    isSmall && { width: '100%', marginTop: 4 },
+                    isSmall && styles.amountSmall,
                   ]}
                 />
                 {outgoings.length > 1 && (
@@ -254,19 +232,13 @@ export default function FinanceScreen() {
           </View>
         </View>
 
-        {/* Totals & info */}
+        {/* totals & info */}
         <View style={styles.totalsRow}>
           <Text style={styles.totalText}>Total Income: {formatCurrency(totalIncome)}</Text>
           <Text style={styles.totalText}>Total Outgoings: {formatCurrency(totalOutgoings)}</Text>
-          <Text
-            style={[
-              styles.totalText,
-              difference >= 0 ? styles.positive : styles.negative,
-            ]}
-          >
+          <Text style={[styles.totalText, difference >= 0 ? styles.positive : styles.negative]}>
             Difference: {formatCurrency(difference)}
           </Text>
-
           {reachedGoal && (
             <Text style={[styles.infoText, styles.success]}>🎉 You have reached your goal!</Text>
           )}
@@ -285,7 +257,7 @@ export default function FinanceScreen() {
           )}
         </View>
 
-        {/* Buttons */}
+        {/* buttons */}
         <View style={styles.buttonsRow}>
           <TouchableOpacity style={styles.saveButton} onPress={saveSheet}>
             <Text style={styles.buttonText}>Save Sheet</Text>
@@ -299,7 +271,7 @@ export default function FinanceScreen() {
   );
 }
 
-/* ---------------- styles ---------------- */
+/* --- styles --- */
 const styles = StyleSheet.create({
   gradient: { flex: 1, paddingTop: Platform.OS === 'android' ? 30 : 60 },
   container: { padding: 20 },
@@ -315,10 +287,13 @@ const styles = StyleSheet.create({
 
   columnsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   column: { flex: 1, marginHorizontal: 5 },
-  row: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
 
+  row: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  rowSmall: { flexDirection: 'column' },              /* ← new */
   labelInput: { flex: 2, marginRight: 5 },
+  labelSmall: { width: '100%', marginRight: 0 },      /* ← new */
   amountInput: { flex: 1, marginRight: 5, minWidth: 90 },
+  amountSmall: { width: '100%', marginRight: 0, marginTop: 4 }, /* ← new */
 
   deleteButton: { paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#ff4444', borderRadius: 4 },
   deleteText: { color: 'white', fontWeight: 'bold', fontSize: 18 },

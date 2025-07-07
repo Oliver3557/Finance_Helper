@@ -339,7 +339,6 @@ export default function FinanceScreen() {
           </TouchableOpacity>
         </View>
 
-
       </ScrollView>
     </LinearGradient>
   );

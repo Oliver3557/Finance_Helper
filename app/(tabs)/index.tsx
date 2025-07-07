@@ -130,7 +130,7 @@ export default function FinanceScreen() {
   return (
     <LinearGradient colors={['#e0eafc', '#cfdef3']} style={styles.gradient}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>Saving Goal Calculator</Text>
+        <Text style={styles.title}>Saving Goal Calculator 222</Text>
 
         {/* Sheet picker */}
         <View style={styles.pickerWrapper}>

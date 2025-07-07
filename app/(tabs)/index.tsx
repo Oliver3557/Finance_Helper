@@ -306,19 +306,7 @@ export default function FinanceScreen() {
           >
             Difference: {formatCurrency(difference)}
           </Text>
-        </View>
-
-        {/* Save & Reset Buttons */}
-        <View style={styles.buttonsRow}>
-          <TouchableOpacity style={styles.saveButton} onPress={saveSheet}>
-            <Text style={styles.buttonText}>Save Sheet</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
-            <Text style={styles.buttonText}>Reset</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Goal Status & Info */}
+          {/* Goal Status & Info */}
         {reachedGoal && (
           <Text style={[styles.infoText, styles.success]}>
             🎉 You have reached your goal!
@@ -339,6 +327,18 @@ export default function FinanceScreen() {
             Estimated months to reach goal: {months}
           </Text>
         )}
+        </View>
+
+        {/* Save & Reset Buttons */}
+        <View style={styles.buttonsRow}>
+          <TouchableOpacity style={styles.saveButton} onPress={saveSheet}>
+            <Text style={styles.buttonText}>Save Sheet</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
+            <Text style={styles.buttonText}>Reset</Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </LinearGradient>
   );

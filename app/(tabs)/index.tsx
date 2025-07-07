@@ -306,27 +306,27 @@ export default function FinanceScreen() {
           >
             Difference: {formatCurrency(difference)}
           </Text>
-          {/* Goal Status & Info */}
-        {reachedGoal && (
-          <Text style={[styles.infoText, styles.success]}>
-            🎉 You have reached your goal!
-          </Text>
-        )}
-        {!reachedGoal && numericGoal > 0 && difference > 0 && (
-          <Text style={styles.infoText}>
-            You need {formatCurrency(needed)} more to reach your goal.
-          </Text>
-        )}
-        {!reachedGoal && numericGoal > 0 && difference <= 0 && (
-          <Text style={[styles.infoText, styles.warning]}>
-            Your monthly surplus is zero or negative, so the goal cannot be reached at this rate.
-          </Text>
-        )}
-        {!reachedGoal && numericGoal > 0 && difference > 0 && (
-          <Text style={styles.infoText}>
-            Estimated months to reach goal: {months}
-          </Text>
-        )}
+                  {/* Goal Status & Info */}
+          {reachedGoal && (
+            <Text style={[styles.infoText, styles.success]}>
+              🎉 You have reached your goal!
+            </Text>
+          )}
+          {!reachedGoal && numericGoal > 0 && difference > 0 && (
+            <Text style={styles.infoText}>
+              You need {formatCurrency(needed)} more to reach your goal.
+            </Text>
+          )}
+          {!reachedGoal && numericGoal > 0 && difference <= 0 && (
+            <Text style={[styles.infoText, styles.warning]}>
+              Your monthly surplus is zero or negative, so the goal cannot be reached at this rate.
+            </Text>
+          )}
+          {!reachedGoal && numericGoal > 0 && difference > 0 && (
+            <Text style={styles.infoText}>
+              Estimated months to reach goal: {months}
+            </Text>
+          )}
         </View>
 
         {/* Save & Reset Buttons */}
@@ -338,6 +338,7 @@ export default function FinanceScreen() {
             <Text style={styles.buttonText}>Reset</Text>
           </TouchableOpacity>
         </View>
+
 
       </ScrollView>
     </LinearGradient>

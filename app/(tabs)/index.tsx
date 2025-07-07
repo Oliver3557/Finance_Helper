@@ -30,7 +30,7 @@ function formatNumberInput(text: string) {
 export default function FinanceScreen() {
   /* responsive flag */
   const { width } = useWindowDimensions();
-  const isSmall = width < 400;
+  const isSmall = width < 600;
 
   /* state (unchanged) */
   const [sheetName, setSheetName] = useState('');
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   columnsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   column: { flex: 1, marginHorizontal: 5 },
 
-  row: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  row: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 },
   rowSmall: { flexDirection: 'column' },              /* ← new */
   labelInput: { flex: 2, marginRight: 5 },
   labelSmall: { width: '100%', marginRight: 0 },      /* ← new */
